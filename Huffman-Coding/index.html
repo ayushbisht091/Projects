@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google-signin-client_id" content="199958017372-5is0djvi7q8tr2ure8e5id1532j0m84m.apps.googleusercontent.com">
+  <title>Huffman Encoder/Decoder</title>
+  <style>
+    :root[data-theme="light"] {
+      --primary-color: #1e90ff;
+      --primary-hover: #0c78d4;
+      --background: #f4f6f8;
+      --section-bg: #fff;
+      --text: #222;
+      --header-footer-bg: #e6f0fa;
+      --header-footer-text: #1e90ff;
+      --input-bg: #fff;
+      --input-border: #ccc;
+    }
+    :root[data-theme="dark"] {
+      --primary-color: #61dafb;
+      --primary-hover: #1e90ff;
+      --background: #181c24;
+      --section-bg: #232a36;
+      --text: #f4f6f8;
+      --header-footer-bg: #232a36;
+      --header-footer-text: #61dafb;
+      --input-bg: #232a36;
+      --input-border: #444b5a;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: var(--background);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      transition: background 0.4s, color 0.4s;
+      overflow-x: hidden;
+    }
+    header {
+      width: 100%;
+      background: var(--header-footer-bg);
+      box-shadow: 0 2px 24px 0 rgba(30, 144, 255, 0.16);
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      transition: background 1.2s cubic-bezier(.4,1.4,.6,1), color 1.2s, backdrop-filter 1.2s;
+      backdrop-filter: blur(18px) saturate(180%);
+      background: linear-gradient(120deg, var(--header-footer-bg) 80%, rgba(255,255,255,0.22) 100%);
+      border-bottom: 2px solid rgba(255,255,255,0.22);
+    }
+    .header-inner {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      padding-right: 2rem;
+      padding-left: 2rem;
+      box-sizing: border-box;
+    }
+    .header-title {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--header-footer-text);
+      letter-spacing: 1px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      flex-direction: column;
+      row-gap: 6px;
+    }
+    .nav-btns {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      gap: 18px;
+      z-index: 1;
+    }
+    .nav-btn {
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 24px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.5s, color 0.5s, transform 0.3s, box-shadow 0.6s, filter 0.5s;
+      box-shadow: 0 2px 8px rgba(30,144,255,0.10);
+    }
+    .nav-btn.active, .nav-btn:hover {
+      background: var(--primary-hover);
+      color: #fff;
+      transform: scale(1.06);
+      box-shadow: 0 4px 16px rgba(30,144,255,0.18);
+    }
+    .theme-toggle {
+      margin-left: 0;
+      margin-top: 6px;
+      background: rgba(255,255,255,0.7);
+      border: 1.5px solid var(--primary-color);
+      color: var(--primary-color);
+      border-radius: 8px;
+      padding: 6px 18px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.5s, color 0.5s, border 0.5s, box-shadow 0.6s;
+      box-shadow: 0 2px 8px rgba(30,144,255,0.10);
+    }
+    .theme-toggle:hover {
+      background: var(--primary-color);
+      color: #fff;
+      border: 1.5px solid #fff;
+      box-shadow: 0 4px 16px rgba(30,144,255,0.18);
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px 0 80px 0;
+    }
+    .section {
+      background: linear-gradient(120deg, var(--section-bg) 80%, rgba(255,255,255,0.22) 100%);
+      backdrop-filter: blur(24px) saturate(200%);
+      border: 2px solid rgba(255,255,255,0.22);
+      box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.22);
+      padding: 36px 36px;
+      margin-top: 40px;
+      border-radius: 20px;
+      max-width: 900px;
+      min-height: 520px;
+      width: 95%;
+      display: none;
+      transition: background 1.2s cubic-bezier(.4,1.4,.6,1), color 1.2s, box-shadow 1.2s, backdrop-filter 1.2s;
+      opacity: 0;
+      animation: fadeInSection 1.4s cubic-bezier(.4,1.4,.6,1) forwards;
+      animation-delay: 0.1s;
+    }
+    .section.active {
+      display: block;
+      opacity: 1;
+      animation: fadeInSection 1.4s cubic-bezier(.4,1.4,.6,1) forwards;
+    }
+    /* Comfortable size for Encode/Decode Text section */
+    #section-text.section.active {
+      max-width: 900px;
+      min-height: 520px;
+      width: 95%;
+      margin: 40px auto 0 auto;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+      padding: 40px 3% 40px 3%;
+    }
+    #section-text.section.active h3 {
+      font-size: 1.6rem;
+      margin-top: 0;
+    }
+    #section-text.section.active label {
+      font-size: 1.08rem;
+    }
+    #section-text.section.active textarea {
+      min-height: 90px;
+      font-size: 1.1rem;
+      margin-bottom: 14px;
+    }
+    #section-text.section.active button {
+      font-size: 1.05rem;
+      padding: 10px 28px;
+      margin-bottom: 14px;
+    }
+    #section-text.section.active hr {
+      margin: 28px 0;
+    }
+    h2 {
+      font-size: 1.6rem;
+      color: var(--primary-color);
+      margin-bottom: 10px;
+    }
+    h3 {
+      font-size: 1.2rem;
+      color: var(--text);
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    textarea, input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      margin-bottom: 10px;
+      border: 1px solid var(--input-border);
+      border-radius: 5px;
+      font-family: inherit;
+      font-size: 14px;
+      resize: vertical;
+      background: var(--input-bg);
+      color: var(--text);
+      transition: background 0.4s, color 0.4s, border 0.4s;
+    }
+    button:not(.nav-btn):not(.theme-toggle) {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 8px 18px;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 15px;
+      margin-top: 10px;
+      transition: background 0.5s, transform 0.3s, box-shadow 0.6s, filter 0.5s;
+      box-shadow: 0 2px 12px rgba(30,144,255,0.13);
+      filter: drop-shadow(0 2px 8px rgba(30,144,255,0.10));
+    }
+    button:not(.nav-btn):not(.theme-toggle):hover {
+      background-color: var(--primary-hover);
+      transform: scale(1.08) translateY(-2px);
+      box-shadow: 0 6px 24px rgba(30,144,255,0.22);
+      filter: brightness(1.08);
+    }
+    a {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+    footer {
+      width: 100%;
+      background: linear-gradient(120deg, var(--header-footer-bg) 80%, rgba(255,255,255,0.22) 100%);
+      box-shadow: 0 -2px 24px 0 rgba(30, 144, 255, 0.16);
+      backdrop-filter: blur(18px) saturate(180%);
+      border-top: 2px solid rgba(255,255,255,0.22);
+      padding: 1.2rem 2rem;
+      text-align: center;
+      color: var(--header-footer-text);
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      transition: background 1.2s cubic-bezier(.4,1.4,.6,1), color 1.2s, backdrop-filter 1.2s;
+    }
+    @keyframes fadeInSection {
+      from { opacity: 0; transform: translateY(40px) scale(0.97); }
+      to { opacity: 1; transform: none; }
+    }
+    .login-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      width: 100%; height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.4s;
+    }
+    .login-container {
+      background: #ffffff;
+      border-radius: 22px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      border: 1px solid #e0e6ef;
+      padding: 44px 38px 36px 38px;
+      min-width: 340px;
+      max-width: 90vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeInLogin 1.4s cubic-bezier(.4,1.4,.6,1);
+    }
+    @keyframes fadeInLogin {
+      from { opacity: 0; transform: translateY(50px) scale(0.96); }
+      to { opacity: 1; transform: none; }
+    }
+    .login-title-centered {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+      letter-spacing: 1px;
+    }
+    .login-form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .login-form label {
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .login-form input[type="email"], .login-form input[type="password"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1.5px solid #bfc9d9;
+      background: #f7fafd;
+      color: #222;
+      font-size: 1.08rem;
+      margin-bottom: 10px;
+      transition: border 0.3s, background 0.3s, color 0.3s;
+      outline: none;
+    }
+    .login-form input[type="email"]:focus, .login-form input[type="password"]:focus {
+      border: 1.5px solid var(--primary-color);
+      background: #fff;
+    }
+    .login-btn {
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(30,144,255,0.10);
+      transition: background 0.2s, transform 0.18s, box-shadow 0.3s;
+    }
+    .login-btn:hover {
+      background: var(--primary-hover);
+      transform: scale(1.04);
+      box-shadow: 0 4px 16px rgba(30,144,255,0.18);
+    }
+    .login-btn-wide {
+      width: 100%;
+      margin-top: 18px;
+      font-size: 1.08rem;
+      padding: 12px 0;
+    }
+    .logout-btn {
+      background: #ff4d4f;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 16px;
+      font-size: 0.98rem;
+      font-weight: 600;
+      margin-left: 32px;
+      margin-top: 2px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.18s, box-shadow 0.3s;
+      box-shadow: 0 2px 8px rgba(255,77,79,0.10);
+    }
+    .logout-btn:hover {
+      background: #d9363e;
+      transform: scale(1.06);
+      box-shadow: 0 4px 16px rgba(255,77,79,0.18);
+    }
+    .header-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      min-width: 160px;
+      padding-right: 18px;
+    }
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      margin-bottom: 2px;
+    }
+    .user-email {
+      font-size: 0.98rem;
+      color: var(--primary-color);
+      margin-bottom: 2px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+    .text-flex-row {
+      display: flex;
+      flex-direction: row;
+      gap: 64px;
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      justify-content: center;
+      position: relative;
+      align-items: stretch;
+    }
+    .text-encode-col, .text-decode-col {
+      flex: 1 1 0;
+      min-width: 0;
+      background: #fff;
+      border-radius: 14px;
+      border: 1.5px solid #e0e6ef;
+      box-shadow: 0 2px 12px 0 rgba(30,144,255,0.08);
+      padding: 28px 22px 22px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      height: 100%;
+    }
+    .text-encode-col {
+      background: #f9fbfd;
+    }
+    .text-decode-col {
+      background: #fff;
+    }
+    .text-flex-row {
+      align-items: stretch;
+    }
+    @media (max-width: 900px) {
+      .text-flex-row {
+        flex-direction: column;
+        gap: 18px;
+        align-items: stretch;
+        max-width: 100%;
+      }
+      .text-encode-col, .text-decode-col {
+        padding: 18px 6vw 14px 6vw;
+        height: auto;
+        min-width: 0;
+      }
+    }
+    .footer-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 3.5rem 0 2rem;
+      box-sizing: border-box;
+    }
+    .footer-title {
+      flex: 1;
+      text-align: center;
+      font-size: 1.1rem;
+      color: var(--header-footer-text);
+      letter-spacing: 1px;
+    }
+    .footer-contact-btn {
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 22px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(30,144,255,0.10);
+      margin-left: 2.5rem;
+    }
+    .footer-contact-btn:hover {
+      background: var(--primary-hover);
+    }
+    /* Contacts Modal Styles */
+    .contacts-modal-bg {
+      position: fixed;
+      left: 0; right: 0; bottom: 64px;
+      top: unset;
+      background: none;
+      z-index: 9999;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      pointer-events: none;
+    }
+    .contacts-modal {
+      background: rgba(255,255,255,0.85);
+      border-radius: 20px;
+      box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.22);
+      padding: 36px 40px 32px 40px;
+      min-width: 280px;
+      max-width: 90vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeInModal 1.4s cubic-bezier(.4,1.4,.6,1);
+      margin-right: 2.5rem;
+      margin-bottom: 60px;
+      position: relative;
+      pointer-events: auto;
+      backdrop-filter: blur(18px) saturate(180%);
+      border: 2px solid rgba(255,255,255,0.22);
+      transition: background 1.2s, box-shadow 1.2s, border 1.2s;
+    }
+    @keyframes fadeInModal {
+      from { opacity: 0; transform: translateY(40px) scale(0.97); }
+      to { opacity: 1; transform: none; }
+    }
+    .contacts-modal::after {
+      content: '';
+      position: absolute;
+      left: auto;
+      right: 32px;
+      bottom: -16px;
+      width: 0;
+      height: 0;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-top: 16px solid #fff;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));
+    }
+    @media (max-width: 700px) {
+      .contacts-modal-bg {
+        align-items: center;
+        justify-content: center;
+        bottom: 0;
+        background: rgba(0,0,0,0.18);
+        pointer-events: auto;
+      }
+      .contacts-modal {
+        margin-right: 0;
+        margin-bottom: 0;
+      }
+      .contacts-modal::after {
+        display: none;
+      }
+    }
+    .contacts-modal h3 {
+      margin-top: 0;
+      color: var(--primary-color);
+      margin-bottom: 18px;
+    }
+    .contacts-modal .close-btn {
+      background: #ff4d4f;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 18px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 18px;
+      transition: background 0.2s;
+    }
+    .contacts-modal .close-btn:hover {
+      background: #d9363e;
+    }
+    [data-theme="dark"] .text-encode-col, [data-theme="dark"] .text-decode-col {
+      background: #232a36 !important;
+      color: #f4f6f8 !important;
+      border: 1.5px solid #444b5a;
+    }
+    [data-theme="dark"] .text-encode-col h3, [data-theme="dark"] .text-decode-col h3,
+    [data-theme="dark"] .text-encode-col label, [data-theme="dark"] .text-decode-col label {
+      color: #f4f6f8 !important;
+    }
+    [data-theme="dark"] .text-encode-col textarea, [data-theme="dark"] .text-decode-col textarea {
+      background: #181c24;
+      color: #f4f6f8;
+      border: 1.5px solid #444b5a;
+    }
+    [data-theme="dark"] .text-encode-col textarea::placeholder, [data-theme="dark"] .text-decode-col textarea::placeholder {
+      color: #bfc9d9;
+      opacity: 1;
+    }
+    [data-theme="dark"] .text-encode-col button, [data-theme="dark"] .text-decode-col button {
+      background: var(--primary-color);
+      color: #222;
+    }
+    /* Login overlay dark mode */
+    [data-theme="dark"] .login-container {
+      background: #232a36;
+      border: 1px solid #444b5a;
+      color: #fff;
+    }
+    [data-theme="dark"] .login-title-centered span {
+      color: #fff;
+    }
+    [data-theme="dark"] .login-form label {
+      color: #fff;
+    }
+    [data-theme="dark"] .login-form input[type="email"],
+    [data-theme="dark"] .login-form input[type="password"] {
+      background: #181c24;
+      color: #fff;
+      border: 1.5px solid #444b5a;
+    }
+    [data-theme="dark"] .login-form input[type="email"]::placeholder,
+    [data-theme="dark"] .login-form input[type="password"]::placeholder {
+      color: #bfc9d9;
+      opacity: 1;
+    }
+    [data-theme="dark"] .section,
+    [data-theme="dark"] .contacts-modal,
+    [data-theme="dark"] .login-container {
+      background: rgba(35,42,54,0.92) !important;
+      border: 2px solid #444b5a !important;
+      box-shadow: 0 12px 40px 0 rgba(30,144,255,0.22);
+      color: #f4f6f8 !important;
+      backdrop-filter: blur(24px) saturate(200%) !important;
+      transition: background 1.2s, box-shadow 1.2s, border 1.2s, color 1.2s;
+    }
+    [data-theme="dark"] header, [data-theme="dark"] footer {
+      background: linear-gradient(120deg, #232a36 80%, rgba(35,42,54,0.22) 100%) !important;
+      box-shadow: 0 2px 24px 0 rgba(30, 144, 255, 0.16);
+      backdrop-filter: blur(18px) saturate(180%) !important;
+      border-bottom: 2px solid #444b5a !important;
+      border-top: 2px solid #444b5a !important;
+      color: #61dafb !important;
+      transition: background 1.2s, color 1.2s, backdrop-filter 1.2s;
+    }
+    #section-encode.section.active {
+      margin-top: 80px;
+    }
+    .login-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .register-btn {
+      background: #4CAF50 !important;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 0;
+      font-size: 1.08rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.18s, box-shadow 0.3s;
+    }
+    .register-btn:hover {
+      background: #45a049 !important;
+      transform: scale(1.04);
+      box-shadow: 0 4px 16px rgba(76,175,80,0.18);
+    }
+    .gmail-btn {
+      background: #fff !important;
+      color: #757575 !important;
+      border: 1px solid #ddd !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-weight: 500 !important;
+      transition: background-color 0.3s, box-shadow 0.3s !important;
+    }
+    .gmail-btn:hover {
+      background: #f5f5f5 !important;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    }
+    .gmail-btn img {
+      width: 20px;
+      height: 20px;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="header-title">
+        <span>🔐</span> Huffman Coding
+        <button class="theme-toggle" onclick="toggleTheme()">
+          <span id="themeIcon">🌙</span>
+          <span id="themeText">Dark Mode</span>
+        </button>
+      </div>
+      <div class="nav-btns">
+        <button class="nav-btn active" onclick="showSection('text')">Encode/Decode Text</button>
+        <button class="nav-btn" onclick="showSection('encode')">Encode File</button>
+        <button class="nav-btn" onclick="showSection('decode')">Decode File</button>
+      </div>
+      <div class="header-actions">
+        <div id="userInfo" class="user-info" style="display:none;">
+          <span id="userEmail" class="user-email"></span>
+        </div>
+        <button id="logoutBtn" class="logout-btn" onclick="handleLogout()" style="display:none;">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Encode/Decode Text Section -->
+    <div id="section-text" class="section active">
+      <div class="text-flex-row">
+        <div class="text-encode-col">
+          <h3>Text Encode</h3>
+          <label for="inputText">Input Text:</label>
+          <textarea id="inputText" rows="3" placeholder="Enter text to encode"></textarea>
+          <button onclick="handleTextEncode()">Encode Text</button>
+          <label for="encodedText">Encoded Result:</label>
+          <textarea id="encodedText" rows="3" readonly></textarea>
+          <label for="inputCodeMap">Code Map:</label>
+          <textarea id="inputCodeMap" rows="3" readonly></textarea>
+        </div>
+        <div class="text-decode-col">
+          <h3>Text Decode</h3>
+          <label for="inputEncodedText">Encoded Binary String:</label>
+          <textarea id="inputEncodedText" rows="3" placeholder="Enter encoded binary string"></textarea>
+          <label for="inputCodeMapInput">Code Map (JSON):</label>
+          <textarea id="inputCodeMapInput" rows="3" placeholder='{"H":"00", "e":"01", ...}'></textarea>
+          <button onclick="handleTextDecode()">Decode Text</button>
+          <label for="decodedText">Decoded Text:</label>
+          <textarea id="decodedText" rows="3" readonly></textarea>
+        </div>
+      </div>
+    </div>
+    
+    <!-- File Encode Section -->
+    <div id="section-encode" class="section">
+      <h2>📁 File Encoding</h2>
+      <label for="fileInput">Upload Plain Text File (.txt):</label>
+      <input type="file" id="fileInput">
+      <button onclick="handleEncodeFile()">Encode File</button>
+      <div>
+        <a id="encodedDownloadLink" style="display:none;">Download Encoded File</a><br>
+        <a id="tableDownloadLink" style="display:none;">Download Code Map</a>
+      </div>
+    </div>
+    
+    <!-- File Decode Section -->
+    <div id="section-decode" class="section">
+      <h2>📂 File Decoding</h2>
+      <label for="encodedFile">Upload Encoded File (.txt):</label>
+      <input type="file" id="encodedFile">
+      <label for="tableFile">Upload Code Map File (.json):</label>
+      <input type="file" id="tableFile">
+      <button onclick="handleDecodeFile()">Decode File</button>
+      <div>
+        <a id="decodeDownloadLink" style="display:none;">Download Decoded File</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-content">
+      <span class="footer-title">Huffman Code</span>
+      <button class="footer-contact-btn" onclick="showContactsModal()">Contacts</button>
+    </div>
+  </footer>
+
+  <div id="contactsModalBg" class="contacts-modal-bg" style="display:none;">
+    <div class="contacts-modal">
+      <h3>Contact Us</h3>
+     
+      <div style="margin-bottom: 10px;">
+        <strong>Ayush Bisht</strong> - +91 9760770148
+      </div>
+      <button class="close-btn" onclick="hideContactsModal()">Close</button>
+    </div>
+  </div>
+
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-container">
+      <div class="login-title-centered">
+      <div class="login-buttons">
+        <button onclick="initGmailLogin()" class="gmail-btn login-bt
+        <span style="font-size:1.7rem;">🔒</span>
+        <span style="font-size:1.35rem;font-weight:bold;margin-left:8px;">Login to Access</span>
+      </div>n-wide">
+          <img src="https://www.google.com/favicon.ico" alt="Gmail" style="width: 20px; margin-right: 10px;">
+          Login with Gmail
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const themeIcon = document.getElementById('themeIcon');
+      const themeText = document.getElementById('themeText');
+      if (html.getAttribute('data-theme') === 'light') {
+        html.setAttribute('data-theme', 'dark');
+        themeIcon.textContent = '🌙';
+        themeText.textContent = 'Light Mode';
+      } else {
+        html.setAttribute('data-theme', 'light');
+        themeIcon.textContent = '🌞';
+        themeText.textContent = 'Dark Mode';
+      }
+    }
+
+    function showSection(section) {
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('section-' + section).classList.add('active');
+      if (section === 'text') document.querySelector('.nav-btn').classList.add('active');
+      else if (section === 'encode') document.querySelectorAll('.nav-btn')[1].classList.add('active');
+      else if (section === 'decode') document.querySelectorAll('.nav-btn')[2].classList.add('active');
+    }
+
+    function showAlert(msg) {
+      console.log('Showing alert:', msg);
+      const alertBox = document.createElement("div");
+      alertBox.textContent = msg;
+      alertBox.style.position = "fixed";
+      alertBox.style.bottom = "20px";
+      alertBox.style.left = "50%";
+      alertBox.style.transform = "translateX(-50%)";
+      alertBox.style.background = msg.includes('successful') ? "#4CAF50" : "#f44336";
+      alertBox.style.color = "white";
+      alertBox.style.padding = "10px 20px";
+      alertBox.style.borderRadius = "6px";
+      alertBox.style.zIndex = "9999";
+      alertBox.style.fontSize = "14px";
+      alertBox.style.fontWeight = "bold";
+      document.body.appendChild(alertBox);
+      setTimeout(() => alertBox.remove(), 5000);
+    }
+
+    function showContactsModal() {
+      document.getElementById('contactsModalBg').style.display = 'flex';
+    }
+
+    function hideContactsModal() {
+      document.getElementById('contactsModalBg').style.display = 'none';
+    }
+
+    // Huffman Node class
+    class HuffmanNode {
+      constructor(char, freq) {
+        this.char = char;
+        this.freq = freq;
+        this.left = null;
+        this.right = null;
+      }
+    }
+
+    // Function to build frequency map
+    function buildFrequencyMap(text) {
+      const freqMap = new Map();
+      for (let char of text) {
+        freqMap.set(char, (freqMap.get(char) || 0) + 1);
+      }
+      return freqMap;
+    }
+
+    // Function to build Huffman tree
+    function buildHuffmanTree(freqMap) {
+      const nodes = [];
+      for (let [char, freq] of freqMap) {
+        nodes.push(new HuffmanNode(char, freq));
+      }
+
+      while (nodes.length > 1) {
+        nodes.sort((a, b) => a.freq - b.freq);
+        const left = nodes.shift();
+        const right = nodes.shift();
+        const parent = new HuffmanNode(null, left.freq + right.freq);
+        parent.left = left;
+        parent.right = right;
+        nodes.push(parent);
+      }
+
+      return nodes[0];
+    }
+
+    // Function to generate Huffman codes
+    function generateHuffmanCodes(root, code = '', codes = new Map()) {
+      if (!root) return codes;
+
+      if (!root.left && !root.right) {
+        codes.set(root.char, code || '0');
+      }
+
+      generateHuffmanCodes(root.left, code + '0', codes);
+      generateHuffmanCodes(root.right, code + '1', codes);
+
+      return codes;
+    }
+
+    // Function to encode text using Huffman codes
+    function encodeText(text, codes) {
+      let encoded = '';
+      for (let char of text) {
+        encoded += codes.get(char);
+      }
+      return encoded;
+    }
+
+    function handleTextEncode() {
+      const text = document.getElementById('inputText').value.trim();
+      if (!text) {
+        showAlert("Please enter some text to encode.");
+        return;
+      }
+
+      try {
+        // Build frequency map
+        const freqMap = buildFrequencyMap(text);
+        
+        // Build Huffman tree
+        const root = buildHuffmanTree(freqMap);
+        
+        // Generate Huffman codes
+        const codes = generateHuffmanCodes(root);
+        
+        // Encode the text
+        const encodedText = encodeText(text, codes);
+        
+        // Display results
+        document.getElementById('encodedText').value = encodedText;
+        document.getElementById('inputCodeMap').value = JSON.stringify(Object.fromEntries(codes), null, 2);
+        
+        showAlert("Text encoded successfully!");
+      } catch (error) {
+        console.error('Encoding error:', error);
+        showAlert("Encoding failed: " + error.message);
+      }
+    }
+
+    function handleTextDecode() {
+      const encodedText = document.getElementById('inputEncodedText').value.trim();
+      const codeMapInput = document.getElementById('inputCodeMapInput').value.trim();
+      
+      if (!encodedText || !codeMapInput) {
+        showAlert("Please provide both encoded string and code map.");
+        return;
+      }
+
+      try {
+        // Parse the code map
+        const codeMap = JSON.parse(codeMapInput);
+        
+        // Create reverse mapping
+        const reverseMap = new Map();
+        for (let [char, code] of Object.entries(codeMap)) {
+          reverseMap.set(code, char);
+        }
+
+        // Decode the text
+        let decodedText = '';
+        let currentCode = '';
+        
+        for (let bit of encodedText) {
+          currentCode += bit;
+          if (reverseMap.has(currentCode)) {
+            decodedText += reverseMap.get(currentCode);
+            currentCode = '';
+          }
+        }
+
+        // Display result
+        document.getElementById('decodedText').value = decodedText;
+        showAlert("Text decoded successfully!");
+      } catch (error) {
+        console.error('Decoding error:', error);
+        showAlert("Decoding failed: " + error.message);
+      }
+    }
+
+    function handleEncodeFile() {
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        showAlert("Please select a file to encode.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+
+        try {
+          const freqMap = buildFrequencyMap(text);
+          const root = buildHuffmanTree(freqMap);
+          const codes = generateHuffmanCodes(root);
+          const encodedText = encodeText(text, codes);
+
+          // Create Blob for encoded file
+          const encodedBlob = new Blob([encodedText], { type: 'text/plain' });
+          const encodedUrl = URL.createObjectURL(encodedBlob);
+
+          // Create Blob for code map
+          const codeMapJson = JSON.stringify(Object.fromEntries(codes), null, 2);
+          const codeMapBlob = new Blob([codeMapJson], { type: 'application/json' });
+          const codeMapUrl = URL.createObjectURL(codeMapBlob);
+
+          // Update download links
+          const encodedDownloadLink = document.getElementById('encodedDownloadLink');
+          encodedDownloadLink.href = encodedUrl;
+          encodedDownloadLink.download = file.name + '.huff'; // Suggest a .huff extension
+          encodedDownloadLink.style.display = 'block';
+          encodedDownloadLink.textContent = `Download Encoded ${file.name}.huff`;
+
+          const tableDownloadLink = document.getElementById('tableDownloadLink');
+          tableDownloadLink.href = codeMapUrl;
+          tableDownloadLink.download = file.name + '.huff_map.json'; // Suggest a .huff_map.json extension
+          tableDownloadLink.style.display = 'block';
+          tableDownloadLink.textContent = `Download Code Map for ${file.name}.huff_map.json`;
+
+          showAlert("File encoded successfully! Download links are available below.");
+        } catch (error) {
+          console.error('File encoding error:', error);
+          showAlert("File encoding failed: " + error.message);
+        }
+      };
+      reader.onerror = function(e) {
+        console.error('File reading error:', e);
+        showAlert('Error reading file: ' + e.target.error.name);
+      };
+      reader.readAsText(file);
+    }
+
+    function handleDecodeFile() {
+      const encodedFile = document.getElementById('encodedFile').files[0];
+      const tableFile = document.getElementById('tableFile').files[0];
+
+      if (!encodedFile || !tableFile) {
+        showAlert("Please select both encoded file and code map.");
+        return;
+      }
+
+      let encodedTextContent = '';
+      let codeMapContent = '';
+
+      const encodedFileReader = new FileReader();
+      encodedFileReader.onload = function(e) {
+        encodedTextContent = e.target.result;
+        processDecode();
+      };
+      encodedFileReader.onerror = function(e) {
+        console.error('Error reading encoded file:', e);
+        showAlert('Error reading encoded file: ' + e.target.error.name);
+      };
+      encodedFileReader.readAsText(encodedFile);
+
+      const tableFileReader = new FileReader();
+      tableFileReader.onload = function(e) {
+        codeMapContent = e.target.result;
+        processDecode();
+      };
+      tableFileReader.onerror = function(e) {
+        console.error('Error reading code map file:', e);
+        showAlert('Error reading code map file: ' + e.target.error.name);
+      };
+      tableFileReader.readAsText(tableFile);
+
+      function processDecode() {
+        if (encodedTextContent && codeMapContent) {
+          try {
+            const codeMap = JSON.parse(codeMapContent);
+            const reverseMap = new Map();
+            for (let [char, code] of Object.entries(codeMap)) {
+              reverseMap.set(code, char);
+            }
+
+            let decodedText = '';
+            let currentCode = '';
+            for (let bit of encodedTextContent) {
+              currentCode += bit;
+              if (reverseMap.has(currentCode)) {
+                decodedText += reverseMap.get(currentCode);
+                currentCode = '';
+              }
+            }
+
+            // Create Blob for decoded file
+            const decodedBlob = new Blob([decodedText], { type: 'text/plain' });
+            const decodedUrl = URL.createObjectURL(decodedBlob);
+
+            // Update download link
+            const decodeDownloadLink = document.getElementById('decodeDownloadLink');
+            decodeDownloadLink.href = decodedUrl;
+            decodeDownloadLink.download = encodedFile.name.replace('.huff', '') + '_decoded.txt';
+            decodeDownloadLink.style.display = 'block';
+            decodeDownloadLink.textContent = `Download Decoded File`;
+
+            showAlert("File decoded successfully! Download link is available below.");
+          } catch (error) {
+            console.error('File decoding error:', error);
+            showAlert("File decoding failed: " + error.message);
+          }
+        }
+      }
+    }
+
+    // Gmail OAuth2 configuration
+    const GMAIL_CLIENT_ID = '199958017372-5is0djvi7q8tr2ure8e5id1532j0m84m.apps.googleusercontent.com';
+    const GMAIL_REDIRECT_URI = 'http://127.0.0.1:5000/api/gmail-callback';
+
+    function initGmailLogin() {
+      console.log('Initializing Gmail login...');
+      
+      // Create Google OAuth URL with state parameter for security
+      const state = Math.random().toString(36).substring(7);
+      localStorage.setItem('oauth_state', state);
+      
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${encodeURIComponent(GMAIL_CLIENT_ID)}` +
+        `&redirect_uri=${encodeURIComponent(GMAIL_REDIRECT_URI)}` +
+        `&response_type=code` +
+        `&scope=${encodeURIComponent('https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid')}` +
+        `&access_type=offline` +
+        `&state=${state}` +
+        `&prompt=consent`;
+
+      console.log('Opening auth URL:', authUrl);
+      
+      // Open Google OAuth in a new window
+      const width = 500;
+      const height = 600;
+      const left = (window.innerWidth - width) / 2;
+      const top = (window.innerHeight - height) / 2;
+      
+      const popup = window.open(
+        authUrl,
+        'Gmail Login',
+        `width=${width},height=${height},left=${left},top=${top}`
+      );
+
+      if (!popup) {
+        showAlert('Please allow popups for this website');
+        return;
+      }
+
+      // Listen for the OAuth response
+      window.addEventListener('message', async (event) => {
+        if (event.origin === 'http://127.0.0.1:5000' && event.data.code) {
+          try {
+            // Verify state parameter
+            const savedState = localStorage.getItem('oauth_state');
+            if (event.data.state !== savedState) {
+              throw new Error('Invalid state parameter');
+            }
+            localStorage.removeItem('oauth_state');
+
+            console.log('Received auth code, sending to server...');
+            const response = await fetch('http://127.0.0.1:5000/api/gmail-login', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              credentials: 'include',
+              body: JSON.stringify({ 
+                code: event.data.code,
+                state: event.data.state
+              })
+            });
+
+            const data = await response.json();
+            console.log('Login response:', data);
+            
+            if (response.ok) {
+              localStorage.setItem('user', JSON.stringify(data.user));
+              document.getElementById('loginOverlay').style.display = 'none';
+              showAlert('Login successful!');
+              updateUserInterface(data.user);
+            } else {
+              throw new Error(data.error || 'Login failed');
+            }
+          } catch (error) {
+            console.error('Gmail login error:', error);
+            showAlert('Login failed: ' + (error.message || 'Unknown error'));
+          }
+        }
+      });
+    }
+
+    function updateUserInterface(user) {
+      console.log('updateUserInterface called with user:', user);
+      const userInfo = document.getElementById('userInfo');
+      const userEmail = document.getElementById('userEmail');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      if (user) {
+        userInfo.style.display = 'flex';
+        userEmail.textContent = user.email;
+        logoutBtn.style.display = 'inline-block';
+        console.log('User logged in. userInfo display:', userInfo.style.display, 'logoutBtn display:', logoutBtn.style.display);
+      } else {
+        userInfo.style.display = 'none';
+        userEmail.textContent = '';
+        logoutBtn.style.display = 'none';
+        console.log('User logged out. userInfo display:', userInfo.style.display, 'logoutBtn display:', logoutBtn.style.display);
+      }
+    }
+
+    async function handleLogout() {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/api/gmail-logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          localStorage.removeItem('user');
+          document.getElementById('loginOverlay').style.display = 'flex';
+          updateUserInterface(null);
+          showAlert('Logged out successfully');
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+        showAlert('Logout failed: ' + error.message);
+      }
+    }
+
+    async function checkAuth() {
+      console.log('checkAuth called.');
+      try {
+        const response = await fetch('http://127.0.0.1:5000/api/check-auth', {
+          credentials: 'include'
+        });
+        const data = await response.json();
+        console.log('checkAuth response:', data);
+        
+        if (data.is_authenticated) {
+          localStorage.setItem('user', JSON.stringify(data.user));
+          document.getElementById('loginOverlay').style.display = 'none';
+          console.log('loginOverlay display set to none in checkAuth.');
+          updateUserInterface(data.user);
+        } else {
+          document.getElementById('loginOverlay').style.display = 'flex';
+          console.log('loginOverlay display set to flex in checkAuth.');
+          updateUserInterface(null);
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+        document.getElementById('loginOverlay').style.display = 'flex';
+        console.log('loginOverlay display set to flex in checkAuth (error case).');
+        updateUserInterface(null);
+      }
+    }
+
+    // Remove the old Gmail API loading code
+    window.onload = function() {
+      console.log('Page loaded');
+      checkAuth();
+    };
+  </script>
+</body>
+</html>
